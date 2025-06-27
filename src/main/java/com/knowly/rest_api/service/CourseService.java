@@ -41,7 +41,7 @@ public class CourseService {
     public List<Course> getAllCourses() {
         Set<String> keys = redisTemplate.keys(COURSE_KEY_PREFIX + "*");
         List<Course> courses = new ArrayList<>();
-        if (keys != null) {
+        if (keys != null && !keys.isEmpty()) {
             for (String key : keys) {
                 Course course = (Course) redisTemplate.opsForValue().get(key);
                 if (course != null) {
