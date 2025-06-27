@@ -1,3 +1,4 @@
+
 package com.knowly.rest_api.service;
 
 import java.util.ArrayList;
@@ -30,8 +31,8 @@ public class CourseService {
     }
 
     public Course getCourseById(Long id) {
-        Course course = (Course) redisTemplate.opsForValue().get(COURSE_KEY_PREFIX + id);
-        if (course != null) {
+        Object obj = redisTemplate.opsForValue().get(COURSE_KEY_PREFIX + id);
+        if (obj instanceof Course course) {
             return course;
         } else {
             throw new RuntimeException("Course not found with ID: " + id);
@@ -41,10 +42,10 @@ public class CourseService {
     public List<Course> getAllCourses() {
         Set<String> keys = redisTemplate.keys(COURSE_KEY_PREFIX + "*");
         List<Course> courses = new ArrayList<>();
-        if (keys != null && !keys.isEmpty()) {
+        if (keys != null) {
             for (String key : keys) {
-                Course course = (Course) redisTemplate.opsForValue().get(key);
-                if (course != null) {
+                Object obj = redisTemplate.opsForValue().get(key);
+                if (obj instanceof Course course) {
                     courses.add(course);
                 }
             }
@@ -53,8 +54,8 @@ public class CourseService {
     }
 
     public void updateCourse(Long id, NewCourseRequest request) {
-        Course course = (Course) redisTemplate.opsForValue().get(COURSE_KEY_PREFIX + id);
-        if (course != null) {
+        Object obj = redisTemplate.opsForValue().get(COURSE_KEY_PREFIX + id);
+        if (obj instanceof Course course) {
             course.setName(request.name());
             course.setPrice(request.price() != null ? request.price().doubleValue() : null);
             redisTemplate.opsForValue().set(COURSE_KEY_PREFIX + id, course);

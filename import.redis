@@ -1,0 +1,32 @@
+
+HSET course:1 id 1 price 8 name "English Course"
+HSET course:2 id 2 price 24 name "Python"
+HSET course:3 id 3 price 78 name "Angular"
+HSET course:4 id 4 price 65 name "ReactJS"
+HSET course:5 id 5 price 23 name "Vue"
+
+
+HSET lesson:2 id 2 content "CHAUDE LA LECONS" course_id 2
+
+
+HSET progression:user:1:lesson:2 user_id 1 lesson_id 2 rate 100
+
+
+HSET role:1 id 1 label "admin"
+HSET role:2 id 2 label "student"
+
+
+HSET user:1 id 1 name "Alice" role_label 1
+HSET user:2 id 2 name "Bob" role_label 2
+
+
+HSET subscription:user:1:course:2 user_id 1 course_id 2 date "2025-06-27"
+HSET subscription:user:2:course:4 user_id 2 course_id 4 date "2025-06-26"
+
+
+SADD user:1:courses 2
+SADD user:2:courses 4
+SADD course:2:users 1
+SADD course:4:users 2
+SADD course:2:lessons 2
+SADD user:1:progressions lesson:2

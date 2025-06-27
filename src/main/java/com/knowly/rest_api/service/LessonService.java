@@ -31,8 +31,8 @@ public class LessonService {
     }
 
     public Lesson getLessonById(Long id) {
-        Lesson lesson = (Lesson) redisTemplate.opsForValue().get(LESSON_KEY_PREFIX + id);
-        if (lesson != null) {
+        Object obj = redisTemplate.opsForValue().get(LESSON_KEY_PREFIX + id);
+        if (obj instanceof Lesson lesson) {
             return lesson;
         } else {
             throw new RuntimeException("Lesson not found with ID: " + id);
@@ -44,10 +44,22 @@ public class LessonService {
         List<Lesson> lessons = new ArrayList<>();
         if (lessonIds != null) {
             for (Object idObj : lessonIds) {
-                Long id = (Long) idObj;
-                Lesson lesson = (Lesson) redisTemplate.opsForValue().get(LESSON_KEY_PREFIX + id);
-                if (lesson != null) {
-                    lessons.add(lesson);
+                Long id = null;
+                if (idObj instanceof Long l)
+                    id = l;
+                else if (idObj instanceof Integer i)
+                    id = i.longValue();
+                else if (idObj instanceof String s) {
+                    try {
+                        id = Long.parseLong(s);
+                    } catch (Exception ignore) {
+                    }
+                }
+                if (id != null) {
+                    Object obj = redisTemplate.opsForValue().get(LESSON_KEY_PREFIX + id);
+                    if (obj instanceof Lesson lesson) {
+                        lessons.add(lesson);
+                    }
                 }
             }
         }
@@ -55,8 +67,8 @@ public class LessonService {
     }
 
     public void updateLesson(Long lessonId, NewLessonRequest request) {
-        Lesson lesson = (Lesson) redisTemplate.opsForValue().get(LESSON_KEY_PREFIX + lessonId);
-        if (lesson != null) {
+        Object obj = redisTemplate.opsForValue().get(LESSON_KEY_PREFIX + lessonId);
+        if (obj instanceof Lesson lesson) {
             lesson.setContent(request.content());
             redisTemplate.opsForValue().set(LESSON_KEY_PREFIX + lessonId, lesson);
         }
