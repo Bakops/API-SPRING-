@@ -1,29 +1,14 @@
 package com.knowly.rest_api.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
-import jakarta.persistence.*;
-import java.util.List;
-
-@Entity
-@Table(name = "course")
 public class Course {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
-    private Long price;
+    private Double price;
 
-    @OneToMany(mappedBy = "course", fetch = FetchType.LAZY)
-    @JsonManagedReference
-    private List<Lesson> lessons;
+    public Course() {
+    }
 
-    public Course() {}
-
-    public Course(Long id, String name, Long price) {
-        this.id = id;
+    public Course(String name, Double price) {
         this.name = name;
         this.price = price;
     }
@@ -44,19 +29,11 @@ public class Course {
         this.name = name;
     }
 
-    public Long getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(Long price) {
+    public void setPrice(Double price) {
         this.price = price;
-    }
-
-    public List<Lesson> getLessons() {
-        return lessons;
-    }
-
-    public void setLessons(List<Lesson> lessons) {
-        this.lessons = lessons;
     }
 }

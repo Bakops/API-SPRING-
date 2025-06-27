@@ -1,54 +1,69 @@
 package com.knowly.rest_api.service;
 
-import com.knowly.rest_api.controller.request.NewCourseRequest;
-import com.knowly.rest_api.entity.Course;
-import com.knowly.rest_api.entity.Lesson;
-import com.knowly.rest_api.repository.CourseRepository;
-import com.knowly.rest_api.repository.LessonRepository;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import com.knowly.rest_api.controller.request.NewCourseRequest;
+import com.knowly.rest_api.entity.Course;
 
 @Service
 public class CourseService {
-    private final CourseRepository courseRepository;
 
-    private final LessonRepository lessonRepository;
     @Autowired
-    public CourseService(CourseRepository courseRepository, LessonRepository lessonRepository){
-        this.courseRepository = courseRepository;
-        this.lessonRepository = lessonRepository;
-    }
+    private RedisTemplate<String, Object> redisTemplate;
 
-    public List<Course> getAllCourses() {
-        return courseRepository.findAll();
-    }
+    private static final String COURSE_KEY_PREFIX = "course:";
 
-    public Optional<Course> getCourseById(Long id) {
-        return courseRepository.findById(id);
-    }
-
-    public void addCourse(NewCourseRequest request) {
+    public Long addCourse(NewCourseRequest request) {
+        Long courseId = System.currentTimeMillis();
         Course course = new Course();
+        course.setId(courseId);
         course.setName(request.name());
-        course.setPrice(request.price());
-        courseRepository.save(course);
+        course.setPrice(request.price() != null ? request.price().doubleValue() : null);
+        redisTemplate.opsForValue().set(COURSE_KEY_PREFIX + courseId, course);
+        return courseId;
     }
 
-    public void updateCourse(Long id, NewCourseRequest request) {
-        Optional<Course> course = courseRepository.findById(id);
-        if(course.isPresent()){
-            Course updatedCourse = course.get();
-            updatedCourse.setName(request.name());
-            updatedCourse.setPrice(request.price());
-            courseRepository.save(updatedCourse);
+    public Course getCourseById(Long id) {
+        Course course = (Course) redisTemplate.opsForValue().get(COURSE_KEY_PREFIX + id);
+        if (course != null) {
+            return course;
+        } else {
+            throw new RuntimeException("Course not found with ID: " + id);
         }
     }
 
-    public void deleteCourse(Long id){
-        lessonRepository.deleteByCourseId(id);
-        courseRepository.deleteById(id);
+    public List<Course> getAllCourses() {
+        Set<String> keys = redisTemplate.keys(COURSE_KEY_PREFIX + "*");
+        List<Course> courses = new ArrayList<>();
+        if (keys != null) {
+            for (String key : keys) {
+                Course course = (Course) redisTemplate.opsForValue().get(key);
+                if (course != null) {
+                    courses.add(course);
+                }
+            }
+        }
+        return courses;
+    }
+
+    public void updateCourse(Long id, NewCourseRequest request) {
+        Course course = (Course) redisTemplate.opsForValue().get(COURSE_KEY_PREFIX + id);
+        if (course != null) {
+            course.setName(request.name());
+            course.setPrice(request.price() != null ? request.price().doubleValue() : null);
+            redisTemplate.opsForValue().set(COURSE_KEY_PREFIX + id, course);
+        } else {
+            throw new RuntimeException("Course not found with ID: " + id);
+        }
+    }
+
+    public void deleteCourse(Long id) {
+        redisTemplate.delete(COURSE_KEY_PREFIX + id);
     }
 }
