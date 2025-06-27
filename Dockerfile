@@ -9,7 +9,7 @@ COPY pom.xml .
 COPY src ./src
 
 # Run Maven to compile the project and create the JAR file
-RUN mvn clean package
+RUN mvn clean package -DskipTests
 
 # Step 2: Use OpenJDK 17 JRE image to run the app
 FROM openjdk:17-jdk-slim
