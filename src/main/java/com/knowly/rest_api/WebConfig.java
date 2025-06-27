@@ -13,7 +13,9 @@ public class WebConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("https://knowly-app-front-next.vercel.app")
+                        .allowedOrigins(
+                                "https://knowly-app-front-next.vercel.app",
+                                "https://knowly-app-front-next-oulff6s38-bakops-projects.vercel.app")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*");
             }
