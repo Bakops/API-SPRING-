@@ -22,9 +22,9 @@ public class RedisConfig {
     public LettuceConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
         config.setHostName("redis-12924.c16.us-east-1-3.ec2.redns.redis-cloud.com");
-        config.setPort(12924);
-        config.setUsername("default");
-        config.setPassword("QB4SKrdOpZAM6XN91EMY0CtJxIt24Hhf");
+        config.setPort(18976);
+        config.setUsername("Baks");
+        config.setPassword("Toure224@@");
 
         LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
                 .clientResources(clientResources)
