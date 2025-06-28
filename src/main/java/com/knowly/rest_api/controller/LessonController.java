@@ -17,21 +17,22 @@ import com.knowly.rest_api.entity.Lesson;
 import com.knowly.rest_api.service.LessonService;
 
 @RestController
-@RequestMapping
+@RequestMapping("/courses")
 public class LessonController {
+
     private final LessonService lessonService;
 
     public LessonController(LessonService lessonService) {
         this.lessonService = lessonService;
     }
 
-    @GetMapping("/courses/{courseId}/lessons")
-    public List<Lesson> getLessonsByCourseId(@PathVariable Long courseId) {
-        return lessonService.getLessonsByCourseId(courseId);
+    @GetMapping("/{courseId}/lessons")
+    public ResponseEntity<List<Lesson>> getLessonsByCourseId(@PathVariable Long courseId) {
+        return ResponseEntity.ok(lessonService.getLessonsByCourseId(courseId));
     }
 
-    @GetMapping("/courses/{courseId}/lessons/{lessonId}")
-    public ResponseEntity<Lesson> getLessonById(@PathVariable Long lessonId) {
+    @GetMapping("/{courseId}/lessons/{lessonId}")
+    public ResponseEntity<Lesson> getLessonById(@PathVariable Long courseId, @PathVariable Long lessonId) {
         try {
             Lesson lesson = lessonService.getLessonById(lessonId);
             return ResponseEntity.ok(lesson);
@@ -40,7 +41,7 @@ public class LessonController {
         }
     }
 
-    @PostMapping("/courses/{courseId}/lessons")
+    @PostMapping("/{courseId}/lessons")
     public ResponseEntity<String> addLesson(@RequestBody NewLessonRequest request, @PathVariable Long courseId) {
         try {
             lessonService.addLesson(request, courseId);
@@ -50,21 +51,22 @@ public class LessonController {
         }
     }
 
-    @PutMapping("/courses/{courseId}/lessons/{lessonId}")
-    public ResponseEntity<String> putLesson(@RequestBody NewLessonRequest request, @PathVariable Long lessonId) {
+    @PutMapping("/{courseId}/lessons/{lessonId}")
+    public ResponseEntity<String> updateLesson(@RequestBody NewLessonRequest request, @PathVariable Long courseId,
+            @PathVariable Long lessonId) {
         try {
             lessonService.updateLesson(lessonId, request);
-            return ResponseEntity.status(204).body("Lesson updated successfully");
+            return ResponseEntity.ok("Lesson updated successfully");
         } catch (Exception e) {
             return ResponseEntity.status(400).body("Failed to update lesson: " + e.getMessage());
         }
     }
 
-    @DeleteMapping("/courses/{courseId}/lessons/{lessonId}")
-    public ResponseEntity<String> deleteLesson(@PathVariable Long lessonId, @PathVariable Long courseId) {
+    @DeleteMapping("/{courseId}/lessons/{lessonId}")
+    public ResponseEntity<String> deleteLesson(@PathVariable Long courseId, @PathVariable Long lessonId) {
         try {
             lessonService.deleteLesson(lessonId, courseId);
-            return ResponseEntity.status(204).body("Lesson deleted successfully");
+            return ResponseEntity.ok("Lesson deleted successfully");
         } catch (Exception e) {
             return ResponseEntity.status(400).body("Failed to delete lesson: " + e.getMessage());
         }

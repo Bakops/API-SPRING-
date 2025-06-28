@@ -1,8 +1,8 @@
-
 package com.knowly.rest_api.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,46 +22,69 @@ public class CourseService {
 
     public Long addCourse(NewCourseRequest request) {
         Long courseId = System.currentTimeMillis();
-        Course course = new Course();
-        course.setId(courseId);
-        course.setName(request.name());
-        course.setPrice(request.price() != null ? request.price().doubleValue() : null);
-        redisTemplate.opsForValue().set(COURSE_KEY_PREFIX + courseId, course);
+        String key = COURSE_KEY_PREFIX + courseId;
+
+        redisTemplate.opsForHash().put(key, "id", String.valueOf(courseId));
+        redisTemplate.opsForHash().put(key, "name", request.name());
+        redisTemplate.opsForHash().put(key, "price", String.valueOf(request.price()));
+
         return courseId;
     }
 
     public Course getCourseById(Long id) {
-        Object obj = redisTemplate.opsForValue().get(COURSE_KEY_PREFIX + id);
-        if (obj instanceof Course course) {
-            return course;
-        } else {
+        String key = COURSE_KEY_PREFIX + id;
+        Map<Object, Object> fields = redisTemplate.opsForHash().entries(key);
+
+        if (fields == null || fields.isEmpty()) {
             throw new RuntimeException("Course not found with ID: " + id);
         }
+
+        Course course = new Course();
+        course.setId(Long.valueOf(fields.get("id").toString()));
+        course.setName(fields.get("name").toString());
+
+        Object price = fields.get("price");
+        if (price != null) {
+            course.setPrice(Double.valueOf(price.toString()));
+        }
+
+        return course;
     }
 
     public List<Course> getAllCourses() {
         Set<String> keys = redisTemplate.keys(COURSE_KEY_PREFIX + "*");
         List<Course> courses = new ArrayList<>();
+
         if (keys != null) {
             for (String key : keys) {
-                Object obj = redisTemplate.opsForValue().get(key);
-                if (obj instanceof Course course) {
+                Map<Object, Object> fields = redisTemplate.opsForHash().entries(key);
+                if (!fields.isEmpty()) {
+                    Course course = new Course();
+                    course.setId(Long.valueOf(fields.get("id").toString()));
+                    course.setName(fields.get("name").toString());
+
+                    Object price = fields.get("price");
+                    if (price != null) {
+                        course.setPrice(Double.valueOf(price.toString()));
+                    }
+
                     courses.add(course);
                 }
             }
         }
+
         return courses;
     }
 
     public void updateCourse(Long id, NewCourseRequest request) {
-        Object obj = redisTemplate.opsForValue().get(COURSE_KEY_PREFIX + id);
-        if (obj instanceof Course course) {
-            course.setName(request.name());
-            course.setPrice(request.price() != null ? request.price().doubleValue() : null);
-            redisTemplate.opsForValue().set(COURSE_KEY_PREFIX + id, course);
-        } else {
+        String key = COURSE_KEY_PREFIX + id;
+
+        if (!redisTemplate.hasKey(key)) {
             throw new RuntimeException("Course not found with ID: " + id);
         }
+
+        redisTemplate.opsForHash().put(key, "name", request.name());
+        redisTemplate.opsForHash().put(key, "price", String.valueOf(request.price()));
     }
 
     public void deleteCourse(Long id) {

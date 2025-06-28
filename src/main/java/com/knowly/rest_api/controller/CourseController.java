@@ -19,6 +19,7 @@ import com.knowly.rest_api.service.CourseService;
 @RestController
 @RequestMapping("/courses")
 public class CourseController {
+
     private final CourseService courseService;
 
     public CourseController(CourseService courseService) {
@@ -26,8 +27,8 @@ public class CourseController {
     }
 
     @GetMapping
-    public List<Course> getCourses() {
-        return courseService.getAllCourses();
+    public ResponseEntity<List<Course>> getCourses() {
+        return ResponseEntity.ok(courseService.getAllCourses());
     }
 
     @GetMapping("{id}")
@@ -43,18 +44,18 @@ public class CourseController {
     @PostMapping
     public ResponseEntity<String> addCourse(@RequestBody NewCourseRequest request) {
         try {
-            courseService.addCourse(request);
-            return ResponseEntity.status(201).body("Course created successfully");
+            Long newId = courseService.addCourse(request);
+            return ResponseEntity.status(201).body("Course created with ID: " + newId);
         } catch (Exception e) {
             return ResponseEntity.status(400).body("Failed to create course: " + e.getMessage());
         }
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<String> putCourse(@RequestBody NewCourseRequest request, @PathVariable Long id) {
+    public ResponseEntity<String> updateCourse(@RequestBody NewCourseRequest request, @PathVariable Long id) {
         try {
             courseService.updateCourse(id, request);
-            return ResponseEntity.status(204).body("Course updated");
+            return ResponseEntity.ok("Course updated successfully");
         } catch (Exception e) {
             return ResponseEntity.status(400).body("Failed to update course: " + e.getMessage());
         }
@@ -64,7 +65,7 @@ public class CourseController {
     public ResponseEntity<String> deleteCourse(@PathVariable Long id) {
         try {
             courseService.deleteCourse(id);
-            return ResponseEntity.status(204).body("Course deleted");
+            return ResponseEntity.ok("Course deleted successfully");
         } catch (Exception e) {
             return ResponseEntity.status(400).body("Failed to delete course: " + e.getMessage());
         }

@@ -2,6 +2,7 @@ package com.knowly.rest_api.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,61 +22,79 @@ public class LessonService {
 
     public void addLesson(NewLessonRequest request, Long courseId) {
         Long lessonId = System.currentTimeMillis();
-        Lesson lesson = new Lesson();
-        lesson.setId(lessonId);
-        lesson.setContent(request.content());
-        lesson.setCourseId(courseId);
+        String key = LESSON_KEY_PREFIX + lessonId;
 
-        redisTemplate.opsForValue().set(LESSON_KEY_PREFIX + lessonId, lesson);
-        redisTemplate.opsForList().rightPush(COURSE_LESSONS_KEY_PREFIX + courseId, lessonId);
+        redisTemplate.opsForHash().put(key, "id", String.valueOf(lessonId));
+        redisTemplate.opsForHash().put(key, "content", request.content());
+        redisTemplate.opsForHash().put(key, "course_id", String.valueOf(courseId));
+
+        redisTemplate.opsForList().rightPush(COURSE_LESSONS_KEY_PREFIX + courseId, lessonId.toString());
     }
 
     public Lesson getLessonById(Long id) {
-        Object obj = redisTemplate.opsForValue().get(LESSON_KEY_PREFIX + id);
-        if (obj instanceof Lesson lesson) {
-            return lesson;
-        } else {
+        String key = LESSON_KEY_PREFIX + id;
+        Map<Object, Object> fields = redisTemplate.opsForHash().entries(key);
+
+        if (fields == null || fields.isEmpty()) {
             throw new RuntimeException("Lesson not found with ID: " + id);
         }
+
+        Lesson lesson = new Lesson();
+        lesson.setId(Long.valueOf(fields.get("id").toString()));
+        lesson.setContent(fields.get("content").toString());
+
+        Object courseId = fields.get("course_id");
+        if (courseId != null) {
+            lesson.setCourseId(Long.valueOf(courseId.toString()));
+        }
+
+        return lesson;
     }
 
     public List<Lesson> getLessonsByCourseId(Long courseId) {
         List<Object> lessonIds = redisTemplate.opsForList().range(COURSE_LESSONS_KEY_PREFIX + courseId, 0, -1);
         List<Lesson> lessons = new ArrayList<>();
+
         if (lessonIds != null) {
             for (Object idObj : lessonIds) {
                 Long id = null;
-                if (idObj instanceof Long l)
-                    id = l;
-                else if (idObj instanceof Integer i)
-                    id = i.longValue();
-                else if (idObj instanceof String s) {
-                    try {
-                        id = Long.parseLong(s);
-                    } catch (Exception ignore) {
-                    }
+                try {
+                    id = Long.valueOf(idObj.toString());
+                } catch (NumberFormatException e) {
+                    continue;
                 }
-                if (id != null) {
-                    Object obj = redisTemplate.opsForValue().get(LESSON_KEY_PREFIX + id);
-                    if (obj instanceof Lesson lesson) {
-                        lessons.add(lesson);
+
+                Map<Object, Object> fields = redisTemplate.opsForHash().entries(LESSON_KEY_PREFIX + id);
+                if (!fields.isEmpty()) {
+                    Lesson lesson = new Lesson();
+                    lesson.setId(Long.valueOf(fields.get("id").toString()));
+                    lesson.setContent(fields.get("content").toString());
+
+                    Object cid = fields.get("course_id");
+                    if (cid != null) {
+                        lesson.setCourseId(Long.valueOf(cid.toString()));
                     }
+
+                    lessons.add(lesson);
                 }
             }
         }
+
         return lessons;
     }
 
     public void updateLesson(Long lessonId, NewLessonRequest request) {
-        Object obj = redisTemplate.opsForValue().get(LESSON_KEY_PREFIX + lessonId);
-        if (obj instanceof Lesson lesson) {
-            lesson.setContent(request.content());
-            redisTemplate.opsForValue().set(LESSON_KEY_PREFIX + lessonId, lesson);
+        String key = LESSON_KEY_PREFIX + lessonId;
+
+        if (!redisTemplate.hasKey(key)) {
+            throw new RuntimeException("Lesson not found with ID: " + lessonId);
         }
+
+        redisTemplate.opsForHash().put(key, "content", request.content());
     }
 
     public void deleteLesson(Long lessonId, Long courseId) {
         redisTemplate.delete(LESSON_KEY_PREFIX + lessonId);
-        redisTemplate.opsForList().remove(COURSE_LESSONS_KEY_PREFIX + courseId, 1, lessonId);
+        redisTemplate.opsForList().remove(COURSE_LESSONS_KEY_PREFIX + courseId, 1, lessonId.toString());
     }
 }

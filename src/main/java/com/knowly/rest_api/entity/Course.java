@@ -1,11 +1,19 @@
 package com.knowly.rest_api.entity;
 
-public class Course {
+import java.io.Serializable;
+
+public class Course implements Serializable {
     private Long id;
     private String name;
     private Double price;
 
     public Course() {
+    }
+
+    public Course(Long id, String name, Double price) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
     }
 
     public Course(String name, Double price) {
