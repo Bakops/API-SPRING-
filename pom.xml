@@ -35,6 +35,13 @@
         <artifactId>spring-boot-starter-data-redis</artifactId>
     </dependency>
 
+    <!-- Stripe service -->
+    <dependency>
+    <groupId>com.stripe</groupId>
+    <artifactId>stripe-java</artifactId>
+    <version>29.3.0-beta.3</version>
+    </dependency>
+
     <!-- Lettuce avec fonctionnalités avancées (CA, TLS) -->
     <dependency>
         <groupId>io.lettuce</groupId>
