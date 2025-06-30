@@ -21,8 +21,8 @@ public class StripeController {
         try {
             String url = stripeService.createCheckoutSession(
                     amount, "eur",
-                    "https://knowly-app-front-next.vercel.app/success",
-                    "https://knowly-app-front-next.vercel.app/cancel");
+                    "https://knowly-app-front-next.vercel.app/me",
+                    "https://knowly-app-front-next.vercel.app");
             return ResponseEntity.ok(url);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erreur Stripe: " + e.getMessage());
